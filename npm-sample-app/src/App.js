@@ -1,7 +1,8 @@
 import "./App.css";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import ExotelCRMWebSDK from "exotel-ip-calling-crm-websdk";
 import Notification from "./Notification";
+import DialPad from "./DialPad";
 
 const accessToken = "<accessToken>";
 const userId = "<userId>";
@@ -9,6 +10,7 @@ const userId = "<userId>";
 function App() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [callActive, setCallActive] = useState(false);
+  const [isDeviceRegistered, setIsDeviceRegistered] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isOnHold, setIsOnHold] = useState(false);
   const [isIncomingCall, setIsIncomingCall] = useState(false);
@@ -17,10 +19,10 @@ function App() {
   const [notificationMessage, setNotificationMessage] = useState(
     "Dialling +918878367443"
   );
-  const [webPhone, setWebPhone] = useState(null);
+  const webPhone = useRef(null);
 
   const HandleCallEvents = (eventType, ...args) => {
-    console.log("HandleCallEvents", eventType,{ args });
+    console.log("HandleCallEvents", eventType, { args });
     switch (eventType) {
       case "incoming":
         setIsIncomingCall(true);
@@ -44,30 +46,41 @@ function App() {
     }
   };
 
-  const RegisterationEvent = (status) => {
-    if (status === "registered") {
+  useEffect(() => {
+    if (isDeviceRegistered) {
       setShowNotification(true);
       setNotificationType("info");
       setNotificationMessage(`Device is online`);
       setTimeout((_) => {
         setShowNotification(false);
       }, 3000);
+      return;
+    }
+  }, [isDeviceRegistered]);
 
+  const RegisterationEvent = (event) => {
+    if (event === "registered") {
+      setIsDeviceRegistered(true);
+      return;
+    }
+    if (event === "unregistered") {
+      setIsDeviceRegistered(false);
     }
   };
 
   useEffect(() => {
     return async () => {
-      if (webPhone) {
+      if (webPhone.current) {
         return;
       }
+      console.log("initialising crmWebPhone", { webPhone });
       const crmWebSDK = new ExotelCRMWebSDK(accessToken, userId, true);
       const crmWebPhone = await crmWebSDK.Initialize(
         HandleCallEvents,
         RegisterationEvent
       );
-      console.log({crmWebPhone});
-      setWebPhone(crmWebPhone);
+      console.log("initialised crmWebPhone", { crmWebPhone });
+      webPhone.current = crmWebPhone;
     };
   });
 
@@ -83,14 +96,14 @@ function App() {
     //   return;
     // }
     // setCallActive(false);
-  }
+  };
 
   const dial = () => {
     if (/^\+?[0-9]{10,14}$/.test(phoneNumber)) {
       setCallActive(true);
       setIsIncomingCall(false);
       showDiallingNotification(phoneNumber);
-      webPhone?.MakeCall(phoneNumber, dialCallback);
+      webPhone?.current?.MakeCall(phoneNumber, dialCallback);
     } else {
       showDiallingErrorNotification();
     }
@@ -117,11 +130,11 @@ function App() {
   };
 
   const acceptCall = () => {
-    webPhone?.AcceptCall();
+    webPhone?.current?.AcceptCall();
   };
 
   const hangup = () => {
-    webPhone?.HangupCall();
+    webPhone?.current?.HangupCall();
     setCallActive(false);
     showCallEndedNotification();
   };
@@ -137,7 +150,7 @@ function App() {
   };
 
   const onClickToggleMute = () => {
-    webPhone?.ToggleMute();
+    webPhone?.current?.ToggleMute();
   };
 
   const handleToggleMute = () => {
@@ -163,7 +176,7 @@ function App() {
   };
 
   const onClickToggleHold = () => {
-    webPhone?.ToggleHold();
+    webPhone?.current?.ToggleHold();
   };
 
   return (
@@ -175,44 +188,56 @@ function App() {
           type={notificationType}
         />
       )}
-      <input
-        className="phoneNumberInput"
-        type="text"
-        id="phoneNumber"
-        placeholder="Enter phone number"
-        pattern="^\+?[0-9]{10,14}$"
-        title="Please enter a valid phone number (10-14 digits, optional +)."
-        onChange={handlePhoneNumberChange}
-      ></input>
-      <div className="PhoneControls">
-            {!callActive && (<button className="dial" onClick={dial}>
-              Dial
-            </button>)}
-            {callActive && (<button className="accept" onClick={acceptCall}>
-              Accept
-            </button>)}
-        <button className="hangup" onClick={hangup} disabled={!callActive}>
-          Hangup
-        </button>
-        {callActive && (
-          <>
-            <button
-              className="mute-unmute"
-              onClick={onClickToggleMute}
-              disabled={!callActive}
-            >
-              {isMuted ? "Unmute" : "Mute"}
+
+      {!isDeviceRegistered ? (
+        "Waiting for device to register"
+      ) : (
+        <>
+          <input
+            className="phoneNumberInput"
+            type="text"
+            id="phoneNumber"
+            placeholder="Enter phone number"
+            pattern="^\+?[0-9]{10,14}$"
+            title="Please enter a valid phone number (10-14 digits, optional +)."
+            onChange={handlePhoneNumberChange}
+          ></input>
+          <div className="PhoneControls">
+            {!callActive && (
+              <button className="dial" onClick={dial}>
+                Dial
+              </button>
+            )}
+            {callActive && (
+              <button className="accept" onClick={acceptCall}>
+                Accept
+              </button>
+            )}
+            <button className="hangup" onClick={hangup} disabled={!callActive}>
+              Hangup
             </button>
-            <button
-              className={isOnHold ? "UnHold" : "Hold"}
-              onClick={onClickToggleHold}
-              disabled={!callActive}
-            >
-              {isOnHold ? "Unhold" : "Hold"}
-            </button>
-          </>
-        )}
-      </div>
+            {callActive && (
+              <>
+                <button
+                  className="mute-unmute"
+                  onClick={onClickToggleMute}
+                  disabled={!callActive}
+                >
+                  {isMuted ? "Unmute" : "Mute"}
+                </button>
+                <button
+                  className={isOnHold ? "UnHold" : "Hold"}
+                  onClick={onClickToggleHold}
+                  disabled={!callActive}
+                >
+                  {isOnHold ? "Unhold" : "Hold"}
+                </button>
+                <DialPad sendDTMF={(digit) => webPhone.current.SendDTMF(digit)}/>
+              </>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
