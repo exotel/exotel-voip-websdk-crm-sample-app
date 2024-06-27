@@ -6,7 +6,7 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
-    "exotel-ip-calling-crm-websdk": "git+https://github.com/Exoabhishek/exotel-ip-calling-crm-websdk",
+    "exotel-ip-calling-crm-websdk": "github:ExoAbhishek/exotel-ip-calling-crm-websdk",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-scripts": "5.0.1",
