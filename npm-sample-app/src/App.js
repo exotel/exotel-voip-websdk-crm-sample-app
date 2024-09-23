@@ -23,6 +23,25 @@ function App() {
 
   const HandleCallEvents = (eventType, ...args) => {
     console.log("HandleCallEvents", eventType, { args });
+    /**
+     * args[0] is the call object that should look like this
+     * {
+        "callAnswerTime": "",
+        "callDirection": "",
+        "callDuration": "",
+        "callEndReason": "",
+        "callEndedTime": "",
+        "callEstablishedTime": "",
+        "callFromNumber": "userxyz",
+        "callId": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@pstn.example.com",
+        "callSid": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "callStartedTime": "",
+        "callState": "",
+        "remoteDisplayName": "",
+        "remoteId": "",
+        "sessionId": ""
+      }
+     */
     switch (eventType) {
       case "incoming":
         setIsIncomingCall(true);
@@ -88,13 +107,40 @@ function App() {
     setPhoneNumber(event.target.value);
   };
 
-  const dialCallback = (status, data) => {
-    console.log("Inside dialCallback", status, data);
-    // if (status === "success") {
-    //   // webPhone?.AcceptCall();
-    //   setCallActive(true);
-    //   return;
-    // }
+  const dialCallback = (status, response) => {
+    console.log("dialCallback response", { response });
+    /** Response format is
+     * {
+          "CustomerId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+          "AppId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+          "CallSid": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "ExotelAccountSid": "exoteltestaccount",
+          "DialWhomNumber": "xxxxxxxxxx",
+          "AppUserID": "user123",
+          "VirtualNumber": "xxxxxxxxxx",
+          "Direction": "outbound",
+          "CallStatus": "",
+          "CallState": "active",
+          "ToNumber": "xxxxxxxxxx",
+          "FromNumber": "sip:userxyz",
+          "TotalDuration": 0,
+          "CallRecordings": "",
+          "AccountDomain": "Mumbai",
+          "TicketId": "",
+          "CallDetail": null,
+          "CreatedAt": "0001-01-01T00:00:00Z",
+          "UpdatedAt": "0001-01-01T00:00:00Z"
+        }
+    */
+    console.log("dialCallback status", status);
+
+    if (status === "success") {
+      const callSid = response.Data.CallSid;
+      console.log("CallSid is ", callSid);
+      // webPhone?.AcceptCall();
+      // setCallActive(true);
+      // return;
+    }
     // setCallActive(false);
   };
 
