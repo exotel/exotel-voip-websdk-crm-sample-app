@@ -13,7 +13,7 @@ If you are not using a package manager like NPM, you can directly include the bu
 
 ## Steps
 
-1. Generate the **'target'** folder in your project.
+1. Generate the **'target'** folder in your project using webpack.
 
 2. Simply import the **'crmBundle.js'** file from target folder like this:
 ```js
