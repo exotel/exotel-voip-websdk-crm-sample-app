@@ -13,8 +13,8 @@
   <button onclick="hangup()" id="hangupButton" disabled>Hangup</button>
   <p id="statusMessage">Initializing...</p>
 
-  <script type="module">
-    import ExotelCRMWebSDK from './target/crmBundle.js';
+  <script src="./target/crmBundle.js"></script>
+  <script>
 
     const accessToken = "This can be generated using the Create Authentication Token API";
     const userId = "This can be generated using the Application user management API";

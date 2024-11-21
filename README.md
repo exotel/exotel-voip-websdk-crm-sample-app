@@ -13,21 +13,19 @@ If you are not using a package manager like NPM, you can directly include the bu
 
 ## Steps
 
-1. Locate the **'target'** folder in the root directory of this project.
+1. Generate the **'target'** folder in your project.
 
-2. Copy the **'target'** folder into your project directory.
-
-3. Simply import the ExotelCRMWebSDK in your code like this:
+2. Simply import the **'crmBundle.js'** file from target folder like this:
 ```js
-import ExotelCRMWebSDK from './target/crmBundle.js';
+<script src="./target/crmBundle.js"></script>
 ```
 
-4. Configure the crmWebSDK object like this:
+3. Configure the crmWebSDK object like this:
 ```js
 const crmWebSDK = new ExotelCRMWebSDK(accessToken, userId, true);
 ```
 
-5. **ExotelCRMWebSDK**
+4. **ExotelCRMWebSDK**
     
     **contructor**
       
@@ -54,7 +52,7 @@ const crmWebSDK = new ExotelCRMWebSDK(accessToken, userId, true);
 
     Promise<ExotelWebPhoneSDK | void>: A promise that resolves to an instance of ExotelWebPhoneSDK if successful, or void if unsuccessful.
 
-6. Use the `Initialize` method on the `ExotelCRMWebSDK` object which returns Promise that resolves to `ExotelWebPhoneSDK` object.
+5. Use the `Initialize` method on the `ExotelCRMWebSDK` object which returns Promise that resolves to `ExotelWebPhoneSDK` object.
     `ExotelCRMWebSDK` does all the work to get necessary details required for the `ExotelWebPhoneSDK`
 
 ```javascript
@@ -63,7 +61,7 @@ const crmWebPhone = await crmWebSDK.Initialize(HandleCallEvents, RegisterationEv
 
 You must pass call events handler, registeration event handler (optional) and session callback handler (optional) to the `Initialize` method
 
-7. **ExotelWebPhoneSDK**
+6. **ExotelWebPhoneSDK**
    
    1. **RegisterDevice**: Registers the device with the call server.
    2. **UnRegisterDevice**: Un-registers the device from the call server.
