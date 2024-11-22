@@ -13,9 +13,9 @@ If you are not using a package manager like NPM, you can directly include the bu
 
 ## Steps
 
-1. Generate the **'target'** folder in your project using webpack.
+1. First you have to generate a **'target'** folder. Refer [this](https://github.com/exotel/exotel-ip-calling-crm-websdk)
 
-2. Simply import the **'crmBundle.js'** file from target folder like this:
+1. You can now utilize the **'crmBundle.js'** file from **'target** folder by including it as a script in your project.. 
 ```js
 <script src="./target/crmBundle.js"></script>
 ```
