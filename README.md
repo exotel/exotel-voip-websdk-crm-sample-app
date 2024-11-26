@@ -32,7 +32,7 @@ const crmWebSDK = new ExotelCRMWebSDK(accessToken, userId, true);
       **accessToken** : This can be generated using the 
   [Create Authentication Token API](https://developer.exotel.com/api/ip-pstn-intermix-webrtc-sdk-integration#create-authentication-token)
 
-    **userId** : You can get the userId using the [Application user management APIs](https://developer.exotel.com/api/ip-pstn-intermix-webrtc-sdk-integration#applications-user-management)
+    **userId** : You can get the AppUserId using the [Application user management APIs](https://developer.exotel.com/api/ip-pstn-intermix-webrtc-sdk-integration#applications-user-management)
     
     **autoConnectVOIP** : If true, it will auto-connect device when the `ExotelWebPhoneSDK` is returned on initialization. (If you have passed false, then you must call `DoRegister` on `ExotelWebPhoneSDK`)
 
