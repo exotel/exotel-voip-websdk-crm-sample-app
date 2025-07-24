@@ -9,7 +9,7 @@ const userId = "<userId>";
 
 function App() {
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [callActive, setCallActive] = useState(false);
+  const [isCallActive, setCallActive] = useState(false);
   const [isDeviceRegistered, setIsDeviceRegistered] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isOnHold, setIsOnHold] = useState(false);
@@ -21,8 +21,12 @@ function App() {
   );
   const webPhone = useRef(null);
 
+  // Refs to debounce mute and hold toggles
+  const lastMuteClick = useRef(0); // Tracks last mute button click time
+  const lastHoldClick = useRef(0); // Tracks last hold button click time
+
   const HandleCallEvents = (eventType, ...args) => {
-    console.log("HandleCallEvents", eventType, { args });
+    console.log("[sample-app] HandleCallEvents", eventType, { args });
     /**
      * args[0] is the call object that should look like this
      * {
@@ -92,13 +96,13 @@ function App() {
       if (webPhone.current) {
         return;
       }
-      console.log("initialising crmWebPhone", { webPhone });
+      console.log("[sample-app] initialising crmWebPhone", { webPhone });
       const crmWebSDK = new ExotelCRMWebSDK(accessToken, userId, true);
       const crmWebPhone = await crmWebSDK.Initialize(
         HandleCallEvents,
         RegisterationEvent
       );
-      console.log("initialised crmWebPhone", { crmWebPhone });
+      console.log("[sample-app] initialised crmWebPhone", { crmWebPhone });
       webPhone.current = crmWebPhone;
     };
   });
@@ -108,7 +112,7 @@ function App() {
   };
 
   const dialCallback = (status, response) => {
-    console.log("dialCallback response", { response });
+    console.log("[sample-app] dialCallback response", { response });
     /** Response format is
      * {
           "CustomerId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
@@ -132,11 +136,11 @@ function App() {
           "UpdatedAt": "0001-01-01T00:00:00Z"
         }
     */
-    console.log("dialCallback status", status);
+    console.log("[sample-app] dialCallback status", status);
 
     if (status === "success") {
       const callSid = response.Data.CallSid;
-      console.log("CallSid is ", callSid);
+      console.log("[sample-app] CallSid is ", callSid);
       // webPhone?.AcceptCall();
       // setCallActive(true);
       // return;
@@ -145,6 +149,7 @@ function App() {
   };
 
   const dial = () => {
+    console.info("[sample-app] dialling phoneNumber: ", phoneNumber);
     if (/^\+?[0-9]{10,14}$/.test(phoneNumber)) {
       setCallActive(true);
       setIsIncomingCall(false);
@@ -177,6 +182,10 @@ function App() {
 
   const acceptCall = () => {
     webPhone?.current?.AcceptCall();
+    setCallActive(true);
+    setIsIncomingCall(false);
+    setIsMuted(false); // Reset mute state
+    setIsOnHold(false); // Reset hold state
   };
 
   const hangup = () => {
@@ -195,34 +204,43 @@ function App() {
     }, 3000);
   };
 
+  // Generic debounce handler for button clicks
+  const debounceClick = (ref, callback, delay = 500) => {
+    const now = Date.now();
+    if (now - ref.current < delay) return;
+    ref.current = now;
+    callback();
+  };
+
+  // Debounced mute toggle handler
   const onClickToggleMute = () => {
-    webPhone?.current?.ToggleMute();
+    debounceClick(lastMuteClick, () => {
+      webPhone?.current?.ToggleMute();
+    });
   };
 
   const handleToggleMute = () => {
-    setIsMuted(!isMuted);
-    setShowNotification(true);
-    setNotificationType("info");
-    if (!isMuted) {
-      setNotificationMessage("Call Muted");
-    } else {
-      setNotificationMessage("Call Un-muted");
-    }
-    setTimeout((_) => {
-      setShowNotification(false);
-    }, 3000);
+    setIsMuted((prev) => {
+      const newMuted = !prev;
+      setShowNotification(true);
+      setNotificationType("info");
+      setNotificationMessage(newMuted ? "Call Muted" : "Call Un-muted");
+      setTimeout((_) => {
+        setShowNotification(false);
+      }, 3000);
+      return newMuted;
+    });
   };
 
   const handleToggleOnHold = () => {
-    if (isOnHold) {
-      setIsOnHold(false);
-      return;
-    }
-    setIsOnHold(true);
+    setIsOnHold((prev) => !prev);
   };
 
+  // Debounced hold toggle handler
   const onClickToggleHold = () => {
-    webPhone?.current?.ToggleHold();
+    debounceClick(lastHoldClick, () => {
+      webPhone?.current?.ToggleHold();
+    });
   };
 
   return (
@@ -249,32 +267,33 @@ function App() {
             onChange={handlePhoneNumberChange}
           ></input>
           <div className="PhoneControls">
-            {!callActive && (
+            {(!isCallActive && !isIncomingCall) && (
               <button className="dial" onClick={dial}>
                 Dial
               </button>
             )}
-            {callActive && (
-              <button className="accept" onClick={acceptCall}>
+            {(isIncomingCall) && (
+              <button className="accept ripple" onClick={acceptCall}>
                 Accept
               </button>
             )}
-            <button className="hangup" onClick={hangup} disabled={!callActive}>
+            {(!isCallActive || !isIncomingCall) && (
+            <button className="hangup" onClick={hangup} disabled={!(isCallActive || isIncomingCall)}>
               Hangup
-            </button>
-            {callActive && (
+            </button>)}
+            {(isCallActive) && (
               <>
                 <button
                   className="mute-unmute"
                   onClick={onClickToggleMute}
-                  disabled={!callActive}
+                  disabled={!isCallActive}
                 >
                   {isMuted ? "Unmute" : "Mute"}
                 </button>
                 <button
-                  className={isOnHold ? "UnHold" : "Hold"}
+                  className={isOnHold ? "unhold" : "hold"}
                   onClick={onClickToggleHold}
-                  disabled={!callActive}
+                  disabled={!isCallActive}
                 >
                   {isOnHold ? "Unhold" : "Hold"}
                 </button>
